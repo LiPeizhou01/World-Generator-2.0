@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: fcb20d7f54f981145baaf9c7d5b65b87
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - depthTextureShader: {fileID: 4800000, guid: d2d383ccffb7b424ca2b4ddbcdf2c572, type: 3}
+  - m_depthTexture: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

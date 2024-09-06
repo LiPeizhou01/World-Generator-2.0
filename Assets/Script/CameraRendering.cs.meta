@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3a367bca150fbbe48b8b3b89885521b2
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - blockMesh: {fileID: 5060444177187149915, guid: df706bf758b0c034ca82497708df7609, type: 3}
+  - blockMaterial: {instanceID: 0}
+  - depthTextureGenerator: {instanceID: 0}
+  - compute: {fileID: 7200000, guid: f8d6cfc3042f50b46b22ba8f71c7df8e, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
