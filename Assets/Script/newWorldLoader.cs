@@ -35,7 +35,7 @@ public class NewWorldLoader : MonoBehaviour
     public GameObject block;
     public GameObject player;
 
-    public string blockFilePath = Path.Combine(Application.streamingAssetsPath, "BlockINFO.xml");
+    public static string blockFilePath = Application.streamingAssetsPath + "/BlockINFO.xml";
     Sprite[] blockSprites;
     public Texture2D[] blockTextures;
     public Dictionary<string, Material[]> MaterialDict = new Dictionary<string, Material[]>();
