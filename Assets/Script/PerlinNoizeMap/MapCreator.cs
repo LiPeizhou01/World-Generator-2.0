@@ -2,9 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Reflection;
 using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static MapCreator;
 using Random = System.Random;
 public struct MapParameters
 {
@@ -15,6 +17,18 @@ public struct MapParameters
     public double weirdness;
     public double temperature;
     public double humidity;
+
+    // 正规化至0~1
+    public void Normalize()
+    {
+        density = Mathf.Clamp( (float) (density + 1.0f) / 2.0f ,-1.0f,1.0f);
+        continents = Mathf.Clamp((float)(continents + 1.0f) / 2.0f, -1.0f, 1.0f);
+        erosion = Mathf.Clamp((float)(erosion + 1.0f) / 2.0f, -1.0f, 1.0f);
+        pv = Mathf.Clamp((float)(pv + 1.0f) / 2.0f, -1.0f, 1.0f);
+        weirdness = Mathf.Clamp((float)(weirdness + 1.0f) / 2.0f, -1.0f, 1.0f);
+        temperature = Mathf.Clamp((float)(temperature + 1.0f) / 2.0f, -1.0f, 1.0f);
+        humidity = Mathf.Clamp((float)(humidity + 1.0f) / 2.0f, -1.0f, 1.0f);
+    }
 }
 public class MapCreator
 {
@@ -109,6 +123,36 @@ public class MapCreator
             _mapSeed_t_h = rand.Next(int.MinValue, int.MaxValue);
             throw new ArgumentException("the seed is incorrect!");
         }
+    }
+
+    public enum PointerType
+    {
+        c = 0,
+        e = 1,
+        pv = 2,
+        t = 3,
+        h = 4,
+    }
+
+    // 获取当前位置在地图中的位置
+    public Vector2 GetNoizeMapPosition(Vector3 Position, PointerType pointerType)
+    {
+        switch ((int)pointerType)
+        {
+            case 0:
+                return new Vector2(-128.0f + (Position.x * mRadio + OffSet_d_c) * 256f / NoizeMap.textureWidth , -128.0f + (Position.z * mRadio + OffSet_d_c) * 256f / NoizeMap.textureHeight);
+            case 1:
+                return new Vector2(-128.0f + (Position.x * mRadio + OffSet_e) * 256f / NoizeMap.textureWidth, -128.0f + (Position.z * mRadio + OffSet_e) * 256f / NoizeMap.textureHeight);
+            case 2:
+                return new Vector2(-128.0f + (Position.x * mRadio + OffSet_e) * 256f / NoizeMap.textureWidth, -128.0f + (Position.z * mRadio + OffSet_e) * 256f / NoizeMap.textureHeight);
+            case 3:
+                return new Vector2(-128.0f + (Position.x * mRadio + OffSet_t_h) * 256f / NoizeMap.textureWidth, -128.0f + (Position.z * mRadio + OffSet_t_h) * 256f / NoizeMap.textureHeight);
+            case 4:
+                return new Vector2(-128.0f + (Position.x * mRadio + OffSet_t_h) * 256f / NoizeMap.textureWidth, -128.0f + (Position.z * mRadio + OffSet_t_h) * 256f / NoizeMap.textureHeight);
+            default:
+                return new Vector2(0.0f ,0.0f);
+        }
+
     }
 
     public MapParameters GetMapParameters(Vector3 cellPosition)
