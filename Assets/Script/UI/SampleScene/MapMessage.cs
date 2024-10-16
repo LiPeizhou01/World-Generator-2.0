@@ -33,6 +33,7 @@ public class MapMessage : MonoBehaviour
         }
     }
 
+    // 更新地图地图信息
     public void ChangeMapMessage(Text mapMessage)
     {
         Debug.Log(PlayerPosition);
@@ -46,6 +47,7 @@ public class MapMessage : MonoBehaviour
         }
     }
 
+    //更新地图高度
     public void HeightMessage(Text heightMessage)
     {
         int height_c = MapCreator.GetHeightBasic(mapParameters.continents);
@@ -54,6 +56,13 @@ public class MapMessage : MonoBehaviour
             $"大陆性影响等级:{height_c}\n" +
             $"侵蚀度影响等级:{height_e}\n" +
             $"pv值叠算影响等级:{height_c+(int)(height_e * mapParameters.pv)}\n";
+    }
+
+
+    // 用于设置地图上的玩家坐标
+    public void PointerPositionSetter(RawImage Pointer, MapCreator.PointerType pointerType)
+    {
+        Pointer.transform.localPosition = NewWorldLoader.Instance.mapCreator.GetNoizeMapPosition(PlayerPosition,pointerType);
     }
 
     public MapParameters mapParameters
