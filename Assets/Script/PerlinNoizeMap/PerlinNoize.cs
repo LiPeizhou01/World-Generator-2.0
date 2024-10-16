@@ -6,7 +6,34 @@ using UnityEngine.UIElements;
 
 public class PerlinNoise
 {
+    public static float PerlinNoise2D(float x, float z)
+    {
+        return Mathf.PerlinNoise(x, z);
+    }
 
+    public static float OctavePerlinNoise2D(float x, float z, int octaves, float persistence)
+    {
+        float total = 0;
+        float frequency = 1;
+        float amplitude = 1;
+        float maxValue = 0;
+
+        for (int i = 0; i < octaves; i++)
+        {
+            total += PerlinNoise2D(x * frequency, z * frequency) * amplitude;
+
+            maxValue += amplitude;
+
+            amplitude *= persistence;
+            frequency *= 2;
+        }
+
+        return total / maxValue;
+    }
+
+
+    // 自制柏林噪声，由于个别取值上的问题现在弃用
+    // 留供参考
     // 梯度置换表，完全使用Ken Perlin的源码中的置换表
     private static readonly int[] permutation = { 151,160,137,91,90,15,
     131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
@@ -64,7 +91,7 @@ public class PerlinNoise
         }
     }
 
-    public double PerlinNoise2D(double x, double y, double angle_1, double angle_2)
+    public double PerlinNoise2D_self(double x, double y, double angle_1, double angle_2)
     {
         // 利用强转和位与求该点整数部分除与256的余数。
         int xi = (int)x & 255;
@@ -87,7 +114,7 @@ public class PerlinNoise
         // 用Grad函数伪随机梯度，并用Lerp做插值计算
         return Lerp(v, Lerp(u, Grad_2D(p[AA], xf, yf, angle_1, angle_2), Grad_2D(p[BA], xf - 1, yf, angle_1, angle_2)), Lerp(u, Grad_2D(p[AB], xf, yf - 1, angle_1, angle_2), Grad_2D(p[BB], xf - 1, yf - 1, angle_1, angle_2)));
     }
-    public double OctavePerlinNoise2D(double x, double y, int octaves, double persistence, double angle_1, double angle_2)
+    public double OctavePerlinNoise2D_self(double x, double y, int octaves, double persistence, double angle_1, double angle_2)
     {
         // 波形叠加函数，octaves是波形叠加次数，persistence为振幅衰减
         double total = 0;
@@ -96,7 +123,7 @@ public class PerlinNoise
         double maxValue = 0;
         for (int i = 0; i < octaves; i++)
         {
-            total += PerlinNoise2D(x * frequency, y * frequency, angle_1, angle_2) * amplitude;
+            total += PerlinNoise2D_self(x * frequency, y * frequency, angle_1, angle_2) * amplitude;
 
             maxValue += amplitude;
 
@@ -108,7 +135,7 @@ public class PerlinNoise
     }
 
 
-    public double PerlinNoise3D(double x, double y, double z)
+    public static double PerlinNoise3D(double x, double y, double z)
     {
 
         int xi = (int)x & 255;                              // Calculate the "unit cube" that the point asked will be located in
@@ -149,7 +176,7 @@ public class PerlinNoise
                       );
         y2 = Lerp(v, x1, x2);
 
-        return Lerp(w, y1, y2);                       // For convenience we bound it to 0 - 1 (theoretical min/max before is -1 - 1)
+        return (Lerp(w, y1, y2)+1.0)/2.0;                       // For convenience we bound it to 0 - 1 (theoretical min/max before is -1 - 1)
     }
 
     public static double Grad_3D(int hash, double x, double y, double z)
@@ -176,7 +203,7 @@ public class PerlinNoise
         }
     }
 
-    public double OctavePerlinNoise3D(double x, double y, double z, int octaves, double persistence)
+    public static double OctavePerlinNoise3D(double x, double y, double z, int octaves, double persistence)
     {
         double total = 0;
         double frequency = 1;
@@ -194,4 +221,7 @@ public class PerlinNoise
 
         return total / maxValue;
     }
+    
 }
+
+
