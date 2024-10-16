@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static Cell;
 using static MapCreator;
 using Random = System.Random;
 public struct MapParameters
@@ -32,51 +33,99 @@ public struct MapParameters
 }
 public class MapCreator
 {
-    static float mRadio = 0.005f;
-    static int octaves_d = 5;
+    static float radio_d = 0.01f;
+    static float radio_c = 0.004f;
+    static float radio_e = 0.008f;
+    static float radio_w = 0.002f;
+    static float radio_t = 0.005f;
+    static float radio_h = 0.005f;
+
+    static int octaves_d = 4;
     static float persistence_d = 0.8f;
-    static int octaves_c = 5;
+    static int octaves_c = 3;
     static float persistence_c = 0.8f;
-    static int octaves_e = 2;
+    static int octaves_e = 4;
     static float persistence_e = 0.6f;
-    static int octaves_pv = 4;
-    static float persistence_pv = 0.8f;
-    static int octaves_t_h = 2;
-    static float persistence_t_h = 0.6f;
+    static int octaves_w = 4;
+    static float persistence_w = 0.8f;
+    static int octaves_t = 2;
+    static float persistence_t = 0.6f;
+    static int octaves_h = 2;
+    static float persistence_h = 0.6f;
 
-    private readonly int _mapSeed_d_c;// 地图种子
-    private readonly int _mapSeed_e;
-    private readonly int _mapSeed_t_h;
+    private readonly ushort _mapSeed_d;   // 地块密度
+    private readonly ushort _mapSeed_c;   //  
+    private readonly ushort _mapSeed_e;
+    private readonly ushort _mapSeed_w;
+    private readonly ushort _mapSeed_t;
+    private readonly ushort _mapSeed_h;
 
-    private int OffSet_d_c
+    private ushort[] OffSet_d
     {
         get
         {
-            return _mapSeed_d_c & 255;
+            ushort offSet_1 = (ushort)(_mapSeed_d & 0x00FF);
+            ushort offSet_2 = (ushort)(_mapSeed_d & 0xFF00 >> 8);
+            return new ushort[] { offSet_1,offSet_2};
         }
     }
 
-    private int OffSet_e
+    private ushort[] OffSet_c
     {
         get
         {
-            return _mapSeed_e & 255;
+            ushort offSet_1 = (ushort)(_mapSeed_c & 0x00FF);
+            ushort offSet_2 = (ushort)(_mapSeed_c & 0xFF00 >> 8);
+            return new ushort[] { offSet_1, offSet_2 };
+        }
+    }
+    private ushort[] OffSet_e
+    {
+        get
+        {
+            ushort offSet_1 = (ushort)(_mapSeed_e & 0x00FF);
+            ushort offSet_2 = (ushort)(_mapSeed_e & 0xFF00 >> 8);
+            return new ushort[] { offSet_1, offSet_2 };
         }
     }
 
-    private int OffSet_t_h
+    private ushort[] OffSet_w
     {
         get
         {
-            return _mapSeed_t_h & 255;
+            ushort offSet_1 = (ushort)(_mapSeed_w & 0x00FF);
+            ushort offSet_2 = (ushort)(_mapSeed_w & 0xFF00 >> 8);
+            return new ushort[] { offSet_1, offSet_2 };
         }
     }
+
+    private ushort[] OffSet_t
+    {
+        get
+        {
+            ushort offSet_1 = (ushort)(_mapSeed_t & 0x00FF);
+            ushort offSet_2 = (ushort)(_mapSeed_t & 0xFF00 >> 8);
+            return new ushort[] { offSet_1, offSet_2 };
+        }
+    }
+
+    private ushort[] OffSet_h
+    {
+        get
+        {
+            ushort offSet_1 = (ushort)(_mapSeed_h & 0x00FF);
+            ushort offSet_2 = (ushort)(_mapSeed_h & 0xFF00 >> 8);
+            return new ushort[] { offSet_1, offSet_2 };
+        }
+    }
+
     public string MapSeed
     {
         get
         {
-            return _mapSeed_d_c.ToString("X").PadRight(8, '0') + _mapSeed_e.ToString("X").PadRight(8, '0')+
-                _mapSeed_t_h.ToString("X").PadRight(8, '0');
+            return _mapSeed_d.ToString("X").PadRight(4, '0') + _mapSeed_c.ToString("X").PadRight(4, '0') +
+                _mapSeed_e.ToString("X").PadRight(4, '0')+ _mapSeed_w.ToString("X").PadRight(4, '0') +
+                _mapSeed_t.ToString("X").PadRight(4, '0') + _mapSeed_h.ToString("X").PadRight(4, '0');
         }
     }
     public PerlinNoise perlinNoise = new PerlinNoise();
@@ -84,45 +133,12 @@ public class MapCreator
     {
         // 随机生成种子
         Random rand = new Random();
-        _mapSeed_d_c = rand.Next(int.MinValue, int.MaxValue);
-        _mapSeed_e = rand.Next(int.MinValue, int.MaxValue);
-        _mapSeed_t_h = rand.Next(int.MinValue, int.MaxValue);
-    }
-
-    public MapCreator(string mapSeed_d_c,string mapSeed_e, string mapSeed_t_h)
-    {
-        Random rand = new Random();
-
-        // 判断种子是否合法，并根据提供的种子初始化地图
-        if (mapSeed_d_c.Length == 8 && int.TryParse(mapSeed_d_c, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int seedValue))
-        {
-            this._mapSeed_d_c = seedValue;
-        }
-        else
-        {
-            _mapSeed_d_c = rand.Next(int.MinValue, int.MaxValue);
-            throw new ArgumentException("the seed is incorrect!");
-        }
-
-        if (mapSeed_e.Length == 8 && int.TryParse(mapSeed_e, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int seedValue_1))
-        {
-            this._mapSeed_e = seedValue_1;
-        }
-        else
-        {
-            _mapSeed_e = rand.Next(int.MinValue, int.MaxValue);
-            throw new ArgumentException("the seed is incorrect!");
-        }
-
-        if (mapSeed_t_h.Length == 8 && int.TryParse(mapSeed_t_h, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int seedValue_2))
-        {
-            this._mapSeed_t_h = seedValue_2;
-        }
-        else
-        {
-            _mapSeed_t_h = rand.Next(int.MinValue, int.MaxValue);
-            throw new ArgumentException("the seed is incorrect!");
-        }
+        _mapSeed_d = (ushort)rand.Next(ushort.MinValue, ushort.MaxValue);
+        _mapSeed_c = (ushort)rand.Next(ushort.MinValue, ushort.MaxValue);
+        _mapSeed_e = (ushort)rand.Next(ushort.MinValue, ushort.MaxValue);
+        _mapSeed_w = (ushort)rand.Next(ushort.MinValue, ushort.MaxValue);
+        _mapSeed_t = (ushort)rand.Next(ushort.MinValue, ushort.MaxValue);
+        _mapSeed_h = (ushort)rand.Next(ushort.MinValue, ushort.MaxValue);
     }
 
     public enum PointerType
@@ -140,15 +156,15 @@ public class MapCreator
         switch ((int)pointerType)
         {
             case 0:
-                return new Vector2(-128.0f + (Position.x * mRadio + OffSet_d_c) * 256f / NoizeMap.textureWidth , -128.0f + (Position.z * mRadio + OffSet_d_c) * 256f / NoizeMap.textureHeight);
+                return new Vector2(-128.0f + (Position.x * radio_c + OffSet_c[0]) * 256f / NoizeMap.textureWidth , -128.0f + (Position.z * radio_c + OffSet_c[1]) * 256f / NoizeMap.textureHeight);
             case 1:
-                return new Vector2(-128.0f + (Position.x * mRadio + OffSet_e) * 256f / NoizeMap.textureWidth, -128.0f + (Position.z * mRadio + OffSet_e) * 256f / NoizeMap.textureHeight);
+                return new Vector2(-128.0f + (Position.x * radio_e + OffSet_e[0]) * 256f / NoizeMap.textureWidth, -128.0f + (Position.z * radio_e + OffSet_e[0]) * 256f / NoizeMap.textureHeight);
             case 2:
-                return new Vector2(-128.0f + (Position.x * mRadio + OffSet_e) * 256f / NoizeMap.textureWidth, -128.0f + (Position.z * mRadio + OffSet_e) * 256f / NoizeMap.textureHeight);
+                return new Vector2(-128.0f + (Position.x * radio_w + OffSet_e[0]) * 256f / NoizeMap.textureWidth, -128.0f + (Position.z * radio_w + OffSet_e[0]) * 256f / NoizeMap.textureHeight);
             case 3:
-                return new Vector2(-128.0f + (Position.x * mRadio + OffSet_t_h) * 256f / NoizeMap.textureWidth, -128.0f + (Position.z * mRadio + OffSet_t_h) * 256f / NoizeMap.textureHeight);
+                return new Vector2(-128.0f + (Position.x * radio_t + OffSet_t[0]) * 256f / NoizeMap.textureWidth, -128.0f + (Position.z * radio_t + OffSet_t[0]) * 256f / NoizeMap.textureHeight);
             case 4:
-                return new Vector2(-128.0f + (Position.x * mRadio + OffSet_t_h) * 256f / NoizeMap.textureWidth, -128.0f + (Position.z * mRadio + OffSet_t_h) * 256f / NoizeMap.textureHeight);
+                return new Vector2(-128.0f + (Position.x * radio_h + OffSet_h[0]) * 256f / NoizeMap.textureWidth, -128.0f + (Position.z * radio_h + OffSet_h[0]) * 256f / NoizeMap.textureHeight);
             default:
                 return new Vector2(0.0f ,0.0f);
         }
@@ -159,18 +175,40 @@ public class MapCreator
     {
         MapParameters mapParameters = new MapParameters();
         // Debug.Log(OffSet_d_c);
-        Vector3 cellOnMap_d_c = cellPosition * mRadio + new Vector3(OffSet_d_c, OffSet_d_c, OffSet_d_c);
-        mapParameters.density = perlinNoise.OctavePerlinNoise3D(cellOnMap_d_c.x, cellOnMap_d_c.y, cellOnMap_d_c.z,octaves_d,persistence_d);
-        mapParameters.continents = perlinNoise.OctavePerlinNoise3D(cellOnMap_d_c.x,0.5f + OffSet_d_c,cellOnMap_d_c.z, octaves_c,persistence_c);
 
-        Vector3 cellOnMap_e_pv_w = (cellPosition) * mRadio + new Vector3(OffSet_e, OffSet_e, OffSet_e);
-        mapParameters.pv = perlinNoise.OctavePerlinNoise3D(cellOnMap_e_pv_w.x,0.5f + OffSet_e,cellOnMap_e_pv_w.z, octaves_pv, persistence_pv);
-        mapParameters.erosion = perlinNoise.OctavePerlinNoise3D(cellOnMap_e_pv_w.x,2.5f +OffSet_e ,cellOnMap_e_pv_w.z, octaves_e, persistence_e);
-        mapParameters.weirdness = perlinNoise.PerlinNoise3D(cellOnMap_e_pv_w.x,4.5f + OffSet_e,cellOnMap_e_pv_w.z);
+        // d
+        Vector3 cellOnMap_d = cellPosition * radio_d + new Vector3(OffSet_d[0]*1.01f, OffSet_d[1] * 1.01f, OffSet_d[1] * 1.01f);
+        mapParameters.density = PerlinNoise.OctavePerlinNoise3D(cellOnMap_d.x, cellOnMap_d.y, cellOnMap_d.z,octaves_d,persistence_d);
 
-        Vector3 cellOnMap_t_h = (cellPosition) * mRadio + new Vector3(OffSet_t_h, OffSet_t_h, OffSet_t_h);
-        mapParameters.temperature = perlinNoise.OctavePerlinNoise3D(cellOnMap_t_h.x,1.5f + OffSet_t_h ,cellOnMap_t_h.z, octaves_t_h, persistence_t_h);
-        mapParameters.humidity = perlinNoise.OctavePerlinNoise3D(cellOnMap_t_h.x,2.5f + OffSet_t_h,cellOnMap_t_h.z, octaves_t_h, persistence_t_h);
+        // c
+        Vector3 cellOnMap_c = cellPosition * radio_c + new Vector3(OffSet_c[0] * 1.01f, OffSet_c[1] * 1.01f, OffSet_c[1] * 1.01f);
+        mapParameters.continents = PerlinNoise.OctavePerlinNoise2D(cellOnMap_c.x,cellOnMap_c.z, octaves_c,persistence_c);
+
+        // e
+        Vector3 cellOnMap_e = cellPosition * radio_e + new Vector3(OffSet_e[0] * 1.01f, OffSet_e[1] * 1.01f, OffSet_e[1] * 1.01f);
+        mapParameters.erosion = PerlinNoise.OctavePerlinNoise2D(cellOnMap_e.x,cellOnMap_e.z, octaves_e, persistence_e);
+
+        // w
+        Vector3 cellOnMap_w = cellPosition * radio_w + new Vector3(OffSet_w[0] * 1.01f, OffSet_w[1]* 1.01f, OffSet_w[1] * 1.01f);
+        mapParameters.weirdness = PerlinNoise.OctavePerlinNoise2D(cellOnMap_w.x,cellOnMap_w.z, octaves_w, persistence_w);
+
+        // t
+        Vector3 cellOnMap_t = cellPosition * radio_t + new Vector3(OffSet_t[0] * 1.01f, OffSet_t[1] * 1.01f, OffSet_t[1] * 1.01f);
+        mapParameters.temperature = PerlinNoise.OctavePerlinNoise2D(cellOnMap_t.x,cellOnMap_t.z, octaves_t, persistence_t);
+
+        // h
+        Vector3 cellOnMap_h = cellPosition * radio_h + new Vector3(OffSet_h[0] * 1.01f, OffSet_h[1] * 1.01f, OffSet_h[1] * 1.01f);
+        mapParameters.humidity = PerlinNoise.OctavePerlinNoise2D(cellOnMap_h.x, cellOnMap_h.z, octaves_h, persistence_h);
+
+        // 调整输出值到-1.0f ~ 1.0f
+        mapParameters.density = mapParameters.density * 2.0f - 1.0f;
+        mapParameters.continents = mapParameters.continents * 2.0f - 1.0f;
+        mapParameters.erosion = mapParameters.erosion * 2.0f - 1.0f;
+        mapParameters.weirdness = mapParameters.weirdness * 2.0f - 1.0f;
+        mapParameters.temperature = mapParameters.temperature * 2.0f - 1.0f;
+        mapParameters.humidity = mapParameters.humidity * 2.0f - 1.0f;
+        // pv 从动系数
+        mapParameters.pv = 1.0f - Mathf.Abs(3.0f * Mathf.Abs((float)mapParameters.weirdness) - 2.0f);
 
         return mapParameters;
     }
@@ -181,23 +219,83 @@ public class MapCreator
         return (int)(k * (x - point_2.x) + point_2.y);
     }
 
+    public static int GetSnowHeightBasic(MapParameters parameters,out BlockTypes blockTypes)
+    {
+        double t = parameters.temperature;
+        double h = parameters.humidity;
+
+        if(t < -0.2 && t> -0.4)
+        {
+            blockTypes = BlockTypes.snow;
+            if (h < -0.65)
+            {
+                return 0;
+            }
+            else if(h < -0.2)
+            { 
+                return 1;
+            }
+            else if(h < 0.0)
+            {
+                return 2;
+            }
+            else if (h < 0.3)
+            {
+                return 4;
+            }
+            else
+            {
+                return 8;
+            }
+        }
+        else if (t <= -0.4)
+        {
+            blockTypes = BlockTypes.ice;
+            if (h < -0.1)
+            {
+                return 0;
+            }
+            else if (h < -0.0)
+            {
+                return 1;
+            }
+            else if (h < 0.3)
+            {
+                return 4;
+            }
+            else if (h < 0.5)
+            {
+                return 8;
+            }
+            else
+            {
+                return 10;
+            }
+        }
+        else
+        {
+            blockTypes = BlockTypes.empty;
+            return 0;
+        }
+    }
+
     // 待重构
     public static int GetHeightBasic(double c)
     {
         // 获取该位置基础高度的函数
 
         // 设置基础浮动设置点
-        Vector2 basicPoint_1 = new Vector2(-1f, Chunk.chunkHight / 2.0f * (3.0f/4.0f));            //固定
-        Vector2 point0 = new Vector2(-0.99f,-Chunk.chunkHight/2.0f * (16.0f/16.0f));
-        Vector2 point1 = new Vector2(-0.6f, -Chunk.chunkHight/2.0f * (7.0f/8.0f));
-        Vector2 point2 = new Vector2(-0.2f, -Chunk.chunkHight/2.0f * (1.0f/16.0f));
-        Vector2 point3 = new Vector2(0.1f, Chunk.chunkHight / 2.0f * (0.0f/16.0f));
-        Vector2 point4 = new Vector2(0.5f, Chunk.chunkHight/2.0f * (7.0f/8.0f));
-        Vector2 point5 = new Vector2(0.7f, Chunk.chunkHight/2.0f * (13.0f/16.0f));
-        Vector2 point6 = new Vector2(0.8f, Chunk.chunkHight / 2.0f * (15.0f/16.0f));
-        Vector2 point7 = new Vector2(0.85f, Chunk.chunkHight / 2.0f * (14.0f/16.0f));
-        Vector2 point8 = new Vector2(0.99f, Chunk.chunkHight / 2.0f * (13.0f /16.0f));
-        Vector2 basicPoint_2 = new Vector2(1f, Chunk.chunkHight / 2.0f * (13.0f / 16.0f));   //固定
+        Vector2 basicPoint_1 = new Vector2(-1f, 5);            //固定
+        Vector2 point0 = new Vector2(-0.99f, 5);
+        Vector2 point1 = new Vector2(-0.455f, 5);
+        Vector2 point2 = new Vector2(-0.3f, 64);
+        Vector2 point3 = new Vector2(0.3f, 64);
+        Vector2 point4 = new Vector2(0.5f, 150);
+        Vector2 point5 = new Vector2(0.7f, 160);
+        Vector2 point6 = new Vector2(0.8f, 150);
+        Vector2 point7 = new Vector2(0.85f, 200);
+        Vector2 point8 = new Vector2(0.99f, 220);
+        Vector2 basicPoint_2 = new Vector2(1f, 230);   //固定
 
         // 懒得改，凑合用
         if (c< point0.x)
@@ -248,17 +346,17 @@ public class MapCreator
         // 获取该位置基础高度的函数
 
         // 设置基础浮动设置点
-        Vector2 basicPoint_1 = new Vector2(-1f, Chunk.chunkHight / 2.0f * (1.0f / 2.0f));            //固定
-        Vector2 point0 = new Vector2(-0.99f, Chunk.chunkHight / 2.0f * (1.0f / 2.0f));
-        Vector2 point1 = new Vector2(-0.6f, Chunk.chunkHight / 2.0f * (1.0f / 4.0f));
-        Vector2 point2 = new Vector2(-0.1f, Chunk.chunkHight / 2.0f * (1.0f / 8.0f));
-        Vector2 point3 = new Vector2(0.1f, Chunk.chunkHight / 2.0f * (1.0f / 16.0f));
-        Vector2 point4 = new Vector2(0.2f, Chunk.chunkHight / 2.0f * (1.5f / 16.0f));
-        Vector2 point5 = new Vector2(0.3f, Chunk.chunkHight / 2.0f * (1.5f / 16.0f));
-        Vector2 point6 = new Vector2(0.5f, Chunk.chunkHight / 2.0f * (1.0f / 32.0f));
-        Vector2 point7 = new Vector2(0.85f, Chunk.chunkHight / 2.0f * (1.0f / 64.0f));
-        Vector2 point8 = new Vector2(0.99f, Chunk.chunkHight / 2.0f * (1.0f / 64.0f));
-        Vector2 basicPoint_2 = new Vector2(1f, Chunk.chunkHight / 2.0f * (1.0f / 64.0f));   //固定
+        Vector2 basicPoint_1 = new Vector2(-1f, 50);            //固定
+        Vector2 point0 = new Vector2(-0.99f, 50);
+        Vector2 point1 = new Vector2(-0.78f, 40);
+        Vector2 point2 = new Vector2(-0.375f, 20);
+        Vector2 point3 = new Vector2(0.2225f, 10);
+        Vector2 point4 = new Vector2(0.05f, 2);
+        Vector2 point5 = new Vector2(0.45f, 10);
+        Vector2 point6 = new Vector2(0.5f, 5);
+        Vector2 point7 = new Vector2(0.85f, 2);
+        Vector2 point8 = new Vector2(0.99f, 2);
+        Vector2 basicPoint_2 = new Vector2(1f, 1);   //固定
 
         // 懒得改，凑合用
         if (e < point0.x)
@@ -302,7 +400,19 @@ public class MapCreator
             return Lerp(e, point8, basicPoint_2);
         }
     }
-    public Cell.BlockTypes GetBlock(Vector3 cellPosition, MapParameters parameters, int HeightBasic)
+
+    // 获取地图基础地表
+    public static int GetMapHeightBasic(MapParameters parameters)
+    {
+        return GetHeightBasic(parameters.continents) + GetHeightErosion(parameters.erosion) +  (int)(parameters.pv * GetHeightErosion(parameters.erosion));
+    }
+
+    public static int GetWaterHeightLevel(double continent, double erosion)
+    {
+        return GetHeightBasic(continent) + GetHeightErosion(erosion) + (int)(-0.7f * GetHeightErosion(erosion));
+    }
+
+    public static Cell.CellStates GetBlock(Vector3 cellPosition, MapParameters parameters, int HeightBasic)
     {
         double cellDensity;
         double extrusion;
@@ -310,70 +420,22 @@ public class MapCreator
         // Debug.Log(extrusion * (cellPosition.y - HeightBasic));
         if (cellPosition.y - HeightBasic > 0)
         {
-            extrusion = 1.0 / 100.0;
+            extrusion = 1.0/16.0;
             cellDensity = parameters.density - extrusion * (cellPosition.y - HeightBasic);
         }
         else
         {
-            extrusion = 1.0 / 80.0;
+            extrusion = 1.0/64.0;
             cellDensity = parameters.density - extrusion * (cellPosition.y - HeightBasic);
         }
 
-        parameters.temperature -= 1.0 / 100.0 * (cellPosition.y);
-        parameters.humidity += 1.0/100.0 * (cellPosition.y);
-
-        // 密度判断层
         if (cellDensity >= 0.0)
         {
-            // 大陆性判断层
-            if (parameters.continents >= -0.2 && parameters.continents <= 0.05)
-            {
-                // 侵蚀度判断层
-                if (parameters.erosion >= 0.3 && parameters.pv <=0.2)
-                {
-                    return Cell.BlockTypes.sand;
-                }
-                else
-                {
-                    return Cell.BlockTypes.soil;
-                }
-            }
-            else
-            {
-                // 侵蚀度判断层
-
-                //温度判断层
-                if (parameters.temperature <= -0.25)
-                {
-                    if(parameters.humidity >= 0.3)
-                    {
-                        return Cell.BlockTypes.ice;
-                    }
-                    else
-                    {
-                        return Cell.BlockTypes.snow;
-                    }
-                }
-                else if (parameters.temperature >= 0.25)
-                {
-                    if (parameters.humidity >= 0.3)
-                    {
-                        return Cell.BlockTypes.ashLand;
-                    }
-                    else
-                    {
-                        return Cell.BlockTypes.badland;
-                    }
-                }
-                else
-                {
-                    return Cell.BlockTypes.soil;
-                }
-            }
+            return Cell.CellStates.block;
         }
         else
         {
-            return Cell.BlockTypes.empty;
+            return Cell.CellStates.empty;
         }
     }
 }

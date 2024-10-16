@@ -71,6 +71,7 @@ public class DepthMapGenerator : MonoBehaviour
             {
                 //Mipmap[0]即copy原始的深度图
                 m_calulateDepthCommandBuffer.Blit(Shader.GetGlobalTexture(m_depthTextureShaderID), currentRenderTexture);
+
             }
             else
             {

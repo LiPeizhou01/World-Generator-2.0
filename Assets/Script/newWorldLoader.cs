@@ -152,7 +152,7 @@ public class NewWorldLoader : MonoBehaviour
     {
         Transform playerTransform = player.transform;
 
-        GameObject gameObject = Instantiate(player,new Vector3(8f,Chunk.chunkHight/2+ 2.0f,8f), Quaternion.identity);
+        GameObject gameObject = Instantiate(player,new Vector3(8f,Chunk.chunkHight,8f), Quaternion.identity);
     }
 
     private void Awake()
@@ -180,12 +180,13 @@ public class NewWorldLoader : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        MainThreadDispatcher.InitializeMainThreadDispatcher();
+
         mapCreator = new MapCreator();
         NoizeMap.Instance.SetNoizeMapImage();
         PlayerInitialize();
-        MapLoader.Instance.InitializeMap();
         // player.transform.position = new Vector3(8f, MapLoader.Instance.chunkNeedToLoad[(MapLoader._mapShowSize - 1) /2, (MapLoader._mapShowSize - 1) / 2].chunkSurface[8,8,0]+2, 8f); //从新确定玩家位置，将其设置到地表，好像有些bug
-        MapLoader.Instance.ChunkUpLoadAsync().Forget();
+        MapLoader.Instance.UpdateMapAsync().Forget();
         Debug.Log($"mapSeed:{mapCreator.MapSeed}");
     }
 

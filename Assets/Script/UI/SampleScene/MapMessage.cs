@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -36,7 +37,6 @@ public class MapMessage : MonoBehaviour
     // 更新地图地图信息
     public void ChangeMapMessage(Text mapMessage)
     {
-        Debug.Log(PlayerPosition);
         if (OnEnterNewCell)
         {
             mapMessage.text = $"Player position(x,z,y):({PlayerPosition.x},{PlayerPosition.z},{PlayerPosition.y})\n" +
@@ -54,8 +54,8 @@ public class MapMessage : MonoBehaviour
         int height_e = MapCreator.GetHeightErosion(mapParameters.erosion);
         heightMessage.text = "演算信息:\n" +
             $"大陆性影响等级:{height_c}\n" +
-            $"侵蚀度影响等级:{height_e}\n" +
-            $"pv值叠算影响等级:{height_c+(int)(height_e * mapParameters.pv)}\n";
+        $"侵蚀度影响等级:{height_e}\n" +
+            $"pv值叠算影响等级:{MapCreator.GetMapHeightBasic(mapParameters)}\n";
     }
 
 

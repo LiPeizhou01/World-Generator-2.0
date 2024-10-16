@@ -30,8 +30,7 @@ public class PlayerBehaviour : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            playerRb.AddRelativeForce(new Vector3(0,3,0),ForceMode.Impulse);
-            Debug.Log("jumping");
+            playerRb.AddRelativeForce(new Vector3(0,5,0),ForceMode.Impulse);
         }
     }
 
