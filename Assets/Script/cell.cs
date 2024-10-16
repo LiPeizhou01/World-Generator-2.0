@@ -6,15 +6,27 @@ using UnityEngine;
 
 public class Cell
 {
-    public Cell(Cell.BlockTypes blockType, Vector3 cellPosition, MapParameters cellParameters)
+    public Cell(Cell.CellStates cellState, Vector3 cellPosition, MapParameters cellParameters)
     {
-        this.cellParameters = cellParameters; 
-        BlockType = blockType;
+        this.cellParameters = cellParameters;
+        _cellState = cellState;
         this.cellPosition = cellPosition;
     }
 
 
     public Vector3 cellPosition;
+
+    public bool IsSurface
+    {
+        get;
+        set;
+    }
+
+    public enum CellStates
+    {
+        empty = 0,
+        block = 1,
+    }
 
     public enum BlockTypes
     {
@@ -29,6 +41,8 @@ public class Cell
         sand = 8,
         ashLand = 9,
         badland = 10,
+        mossy_1 = 11,
+        mossy_2 = 12,
     }
 
     // 晶格左右的晶格状态
@@ -70,6 +84,16 @@ public class Cell
     {
         set;
         get;
+    }
+
+    private CellStates _cellState;
+
+    public CellStates CellState
+    {
+        get
+        {
+            return _cellState;
+        }
     }
 
     public BlockArounds BlockAround = 0x00;
